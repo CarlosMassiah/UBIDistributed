@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Payment portal</title>
+
+    <link rel="stylesheet" type="text/css" href="main.css">
+
+    <script src="./node_modules/web3/dist/web3.min.js"></script>
+
+</head>
+
+<body>
+    <div class="container" align="center">
+
+        <h1 align="center">Universal Basic Income - Decentralised</h1>
+
+        <h2 id="permission"></h2>
+        <h3 id="kid"></h3>
+        <img id="loader" src="https://loading.io/spinners/double-ring/lg.double-ring-spinner.gif" align="center">
+        <div>
+            <button id="Paybutton" style="width: 209px; height: 70	px; color: green">Pay into community pot</button>
+			
+            <input type="text" id="payamount"> </input>
+			<pre id="UserMessageBox"></pre>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+
+    <script>
+        if (typeof web3 !== 'undefined') {
+            web3 = new Web3(web3.currentProvider);
+        } else {
+            // set the provider you want from Web3.providers
+            web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+        }
+
+        web3.eth.defaultAccount = web3.eth.accounts[0];
+
+        var ManagerContract = web3.eth.contract([
+            {
+                "constant": false,
+                "inputs": [
+                    {
+                        "name": "toadd",
+                        "type": "address"
+                    }
+                ],
+                "name": "addPayee",
+                "outputs": [
+                    {
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": false,
+                        "name": "received",
+                        "type": "bool"
+                    }
+                ],
+                "name": "paymentrecvd",
+                "type": "event"
+            },
+            {
+                "constant": false,
+                "inputs": [
+                    {
+                        "name": "genAd",
+                        "type": "address"
+                    }
+                ],
+                "name": "registerGenesis",
+                "outputs": [
+                    {
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "constant": false,
+                "inputs": [
+                    {
+                        "name": "toremove",
+                        "type": "address"
+                    }
+                ],
+                "name": "removePayee",
+                "outputs": [
+                    {
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "constant": false,
+                "inputs": [],
+                "name": "triggerPayoff",
+                "outputs": [
+                    {
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "payable": true,
+                "stateMutability": "payable",
+                "type": "fallback"
+            },
+            {
+                "inputs": [],
+                "payable": true,
+                "stateMutability": "payable",
+                "type": "constructor"
+            },
+            {
+                "constant": true,
+                "inputs": [],
+                "name": "isReadyToPayoff",
+                "outputs": [
+                    {
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "constant": true,
+                "inputs": [],
+                "name": "numberPayees",
+                "outputs": [
+                    {
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "constant": true,
+                "inputs": [
+                    {
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "payeearr",
+                "outputs": [
+                    {
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "constant": true,
+                "inputs": [
+                    {
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "name": "payeemap",
+                "outputs": [
+                    {
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "constant": true,
+                "inputs": [],
+                "name": "returnCurrentPot",
+                "outputs": [
+                    {
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "view",
+                "type": "function"
+            }
+        ]);
+
+        var Manager = ManagerContract.at('0x2bbca92e39b461b9d10ed07b69b8f939fb6e4680');
+        console.log(Manager);
+        var paymentReceivedEvent = Manager.paymentrecvd();
+        paymentReceivedEvent.watch(function (error, result) {
+			
+            if (!error) {
+                console.log("Payment has been received. Nice.")
+				
+            }
+			<!-- else -->
+			<!-- { -->
+				<!-- element.textContent = error; -->
+			<!-- } -->
+			
+			
+        });
+        $("#Paybutton").click(function () {
+            $("#loader").show();
+            //Pay the contract HERE
+            var payam = document.getElementById('payamount').value;
+            web3.eth.sendTransaction({
+                from: web3.eth.accounts[0],
+                to: "0x2bbca92e39b461b9d10ed07b69b8f939fb6e4680",
+                value: web3.toWei(payam, "ether"),
+            }, function (err, transactionHash) {
+			$("#loader").hide();
+				var element = document.getElementById('UserMessageBox');
+				element.style.height = 40;
+                if (err) {
+					//document.getElementById("routeName")
+					
+                    console.log("Error");
+                    console.log(err);
+					element.textContent = "Error" + err;
+					var y = document.createTextNode("This just got added");
+                } else {
+                    console.log("No Error in paying");
+					element.textContent = "The payment has been recieved!\n" + transactionHash;
+                }
+            });
+            //Check Payoff status
+            Manager.isReadyToPayoff((err, result) => {
+                if (!err) {
+                    console.log(result);
+                }
+            });
+            Manager.numberPayees((err, result) => {
+                if (!err) {
+                    console.log(result);
+                }
+            });
+            Manager.returnCurrentPot((err, result) => {
+                if (!err) {
+                    console.log(result.toString());
+                }
+            });
+        });
+    </script>
+
+</body>
+
+</html>

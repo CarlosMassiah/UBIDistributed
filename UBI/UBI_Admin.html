@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Key Lifecycle Management</title>
+
+    <link rel="stylesheet" type="text/css" href="main.css">
+
+    <script src="./node_modules/web3/dist/web3.min.js"></script>
+
+</head>
+
+<body>
+    <div class="container" align="center">
+
+        <h1 align="center">Universal Basic Income - Decentralised</h1>
+
+        <h2 id="permission"></h2>
+        <h3 id="kid"></h3>
+        <img id="loader" src="https://loading.io/spinners/double-ring/lg.double-ring-spinner.gif">
+        <div>
+            <button id="Triggerbutton" >Trigger payoff</button>
+        </div>
+        <div>
+            <input type="text" id="payeetoadd"> </input>
+            <button id="AddPayee">Add a payee to pot</button>
+        </div>
+        <div>
+            <input type="text" id="payeetoremove"> </input>
+            <button id="RemovePayee">Remove a payee from pot</button>
+        </div>
+        <div>
+                <input type="text" id="addrtocheck"> </input>
+                <button id="CheckBalance">Check Balance</button>
+				<button id="CheckRecipientBalances">Check Recipient Balances</button>
+				
+                <pre id="BalanceFill"></pre>
+        </div>
+		<div>
+                <pre id="UserMessageBox"></pre>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+
+    <script>
+        if (typeof web3 !== 'undefined') {
+            web3 = new Web3(web3.currentProvider);
+        } else {
+            // set the provider you want from Web3.providers
+            web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+        }
+
+        web3.eth.defaultAccount = web3.eth.accounts[0];
+
+        var ManagerContract = web3.eth.contract([
+            {
+                "constant": false,
+                "inputs": [
+                    {
+                        "name": "toadd",
+                        "type": "address"
+                    }
+                ],
+                "name": "addPayee",
+                "outputs": [
+                    {
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": false,
+                        "name": "received",
+                        "type": "bool"
+                    }
+                ],
+                "name": "paymentrecvd",
+                "type": "event"
+            },
+            {
+                "constant": false,
+                "inputs": [
+                    {
+                        "name": "genAd",
+                        "type": "address"
+                    }
+                ],
+                "name": "registerGenesis",
+                "outputs": [
+                    {
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "constant": false,
+                "inputs": [
+                    {
+                        "name": "toremove",
+                        "type": "address"
+                    }
+                ],
+                "name": "removePayee",
+                "outputs": [
+                    {
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "constant": false,
+                "inputs": [],
+                "name": "triggerPayoff",
+                "outputs": [
+                    {
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "payable": true,
+                "stateMutability": "payable",
+                "type": "fallback"
+            },
+            {
+                "inputs": [],
+                "payable": true,
+                "stateMutability": "payable",
+                "type": "constructor"
+            },
+            {
+                "constant": true,
+                "inputs": [],
+                "name": "isReadyToPayoff",
+                "outputs": [
+                    {
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "constant": true,
+                "inputs": [],
+                "name": "numberPayees",
+                "outputs": [
+                    {
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "constant": true,
+                "inputs": [
+                    {
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "payeearr",
+                "outputs": [
+                    {
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "constant": true,
+                "inputs": [
+                    {
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "name": "payeemap",
+                "outputs": [
+                    {
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "constant": true,
+                "inputs": [],
+                "name": "returnCurrentPot",
+                "outputs": [
+                    {
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "view",
+                "type": "function"
+            }
+        ]);
+
+        var Manager = ManagerContract.at('0x2bbca92e39b461b9d10ed07b69b8f939fb6e4680');
+        console.log(Manager);
+        var paymentReceivedEvent = Manager.paymentrecvd();
+        paymentReceivedEvent.watch(function (error, result) {
+            if (!error) {
+                console.log("Payment has been received. Nice.")
+            }
+			
+        });
+        $("#Triggerbutton").click(function () {
+            $("#loader").hide();
+            Manager.triggerPayoff((err, result) => {
+                if (!err) {
+                    console.log("Remaining Pot:")
+                    console.log("Payment triggered");
+                }
+            });
+            Manager.returnCurrentPot((err, result) => {
+                if (!err) {
+                    console.log(result.toString());
+                }
+            });
+        });
+        $("#AddPayee").click(function () {
+            $("#loader").hide();
+            var payaddr = document.getElementById('payeetoadd').value;
+            Manager.addPayee(payaddr, (err, result) => {
+                if (!err) {
+                    console.log("Payee Added");
+                }
+            });
+        });
+        $("#RemovePayee").click(function () {
+            $("#loader").hide();
+            var payaddr = document.getElementById('payeetoremove').value;
+            Manager.removePayee(payaddr, (err, result) => {
+                if (!err) {
+                    console.log("Payee Removed");
+                }
+            });
+        });
+        $("#CheckBalance").click(function () {
+            $("#loader").hide();
+            var element = document.getElementById('BalanceFill');
+			
+            var address = document.getElementById('addrtocheck').value;
+			
+            var contents = web3.fromWei(web3.eth.getBalance(address));
+			
+            element.textContent = "The current balance is " + contents;
+			
+			element.setAttribute('size',45);
+			element.setAttribute('color','geen'); 
+			element2.textContent = contents;
+        });
+		$("#CheckRecipientBalances").click(function () {
+            $("#loader").hide();
+            var element = document.getElementById('BalanceFill');
+			
+			<!-- var address1 = "0x16a5c7b5803abc5ac67b164133966d30abe240d1"; -->
+			<!-- var address2 = "0x16a5c7b5803abc5ac67b164133966d30abe240d1"; -->
+			<!-- var address3 = "0x16a5c7b5803abc5ac67b164133966d30abe240d1"; -->
+			<!-- var address4 = "0x16a5c7b5803abc5ac67b164133966d30abe240d1"; -->
+			<!-- var address5 = "0x16a5c7b5803abc5ac67b164133966d30abe240d1"; -->
+			
+			var address = document.getElementById('addrtocheck').value;
+			
+            var contents1 = web3.fromWei(web3.eth.getBalance(web3.eth.accounts[0]));
+			var contents2 = web3.fromWei(web3.eth.getBalance(web3.eth.accounts[1]));
+			var contents3 = web3.fromWei(web3.eth.getBalance(web3.eth.accounts[2]));
+			var contents4 = web3.fromWei(web3.eth.getBalance(web3.eth.accounts[3]));
+			var contents5 = web3.fromWei(web3.eth.getBalance(web3.eth.accounts[4]));
+			
+			var fullString ="";
+			
+			fullString = "Updated Balances:\n";
+			
+			fullString = fullString + web3.eth.accounts[0] + ": " + contents1 + "\n";
+			fullString = fullString + web3.eth.accounts[1] + ": " + contents2 + "\n";
+			fullString = fullString + web3.eth.accounts[2] + ": " + contents3 + "\n";
+			fullString = fullString + web3.eth.accounts[3] + ": " + contents4 + "\n";
+			fullString = fullString + web3.eth.accounts[4] + ": " + contents5 + "\n";
+			
+			element.textContent = "	Update balances\n" + fullString;
+			
+			
+        });
+    </script>
+
+</body>
+
+</html>
