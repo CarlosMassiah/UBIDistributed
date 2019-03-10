@@ -248,6 +248,9 @@
                 if (!err) {
                     console.log("Remaining Pot:")
                     console.log("Payment triggered");
+					var element = document.getElementById('BalanceFill');
+					
+					element.textContent = "Payout sent";
                 }
             });
             Manager.returnCurrentPot((err, result) => {
@@ -262,6 +265,10 @@
             Manager.addPayee(payaddr, (err, result) => {
                 if (!err) {
                     console.log("Payee Added");
+					var element = document.getElementById('BalanceFill');
+					
+					element.textContent = "Added payee:\n" + payaddr;
+					
                 }
             });
         });
@@ -270,6 +277,10 @@
             var payaddr = document.getElementById('payeetoremove').value;
             Manager.removePayee(payaddr, (err, result) => {
                 if (!err) {
+					var element = document.getElementById('BalanceFill');
+					
+					element.textContent = "Removed payee:\n" + payaddr
+					
                     console.log("Payee Removed");
                 }
             });
@@ -286,7 +297,7 @@
 			
 			element.setAttribute('size',45);
 			element.setAttribute('color','geen'); 
-			element2.textContent = contents;
+			//element2.textContent = contents;
         });
 		$("#CheckRecipientBalances").click(function () {
             $("#loader").hide();
@@ -316,7 +327,7 @@
 			fullString = fullString + web3.eth.accounts[3] + ": " + contents4 + "\n";
 			fullString = fullString + web3.eth.accounts[4] + ": " + contents5 + "\n";
 			
-			element.textContent = "	Update balances\n" + fullString;
+			element.textContent = fullString;
 			
 			
         });
